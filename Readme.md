@@ -23,51 +23,174 @@ To identify underserved regions in Manitoba by:
 
 ## Methodology
 
-### 1. Data Preparation
-- Loaded census boundary shapefile into QGIS  
-- Filtered dataset to include only Manitoba regions  
-- Imported population and broadband datasets as CSV files  
+# Manitoba Broadband Competitive Gap Analysis
 
-### 2. Data Integration
-- Joined population data to geographic boundaries using region identifiers  
-- Joined broadband availability data to the same geographic layer  
+## Project Overview
 
-### 3. Feature Engineering
-Created a metric to estimate underserved regions:
-underserved_score = population / broadband_availability
+This project analyzes 50/10 Mbps broadband coverage across Manitoba using a 1 km hexagon grid to identify underserved communities. The objective is to highlight coverage gaps and support infrastructure planning.
+
+---
+
+## Step 1: Initial Objective
+
+The analysis began with:
+- A 1 km hexagon grid covering Manitoba  
+- Broadband availability data from the National Broadband Data (NBD) framework  
+
+---
+
+## Step 2: Failed Join (ID Mismatch)
+
+An initial attempt was made to join broadband CSV data to the hexagon grid.
+
+Issue:
+- HexUIDs were in the 5M range  
+- CSV PHH IDs were in the 7–9M range  
+- The join failed, producing null values  
+
+<p align="center">
+  <img src="images/id_mismatch.png" width="700"><br>
+  <em>Join failure caused by mismatched ID ranges</em>
+</p>
+
+---
+
+## Step 3: Data Discovery
+
+The failure was traced to a version mismatch:
+- The hex grid and broadband dataset were derived from different versions of the National Broadband Data framework  
+
+---
+
+## Step 4: Bridge Strategy (Roads Dataset)
+
+To resolve the mismatch, the NBD Roads GeoPackage for Manitoba was used:
+- Contains the correct 7–9M ID structure  
+- Aligns with the broadband data framework  
+
+<p align="center">
+  <img src="images/road_ids.png" width="700"><br>
+  <em>Road dataset with compatible ID structure</em>
+</p>
+
+---
+
+## Step 5: Key Discovery
+
+The Roads dataset already included broadband availability:
+
+- Field: `Avail_50_10_Dispo`  
+- Values: True / False  
+
+This eliminated the need to use the original CSV.
+
+<p align="center">
+  <img src="images/avail_field.png" width="700"><br>
+  <em>Broadband availability field present in dataset</em>
+</p>
+
+---
+
+## Step 6: Spatial Join (Core Analysis)
+
+Broadband availability was transferred from road segments to the hexagon grid using:
+
+- Join Attributes by Location  
+
+This step enabled spatial aggregation of coverage.
+
+<p align="center">
+  <img src="images/spatial_join.png" width="700"><br>
+  <em>Spatial join transferring road data into hexagons</em>
+</p>
+
+---
+
+## Step 7: Add Regional Context
+
+A second spatial join was performed to attach:
+
+- Town boundaries (CSDNAME)
+
+This allowed analysis at the community level.
+
+<p align="center">
+  <img src="images/csd_join.png" width="700"><br>
+  <em>Hex grid enriched with town-level identifiers</em>
+</p>
+
+---
+
+## Step 8: Data Transformation
+
+The availability field was converted:
+
+- True → 1  
+- False → 0  
+
+Tool used:
+- Field Calculator  
+
+This enabled numerical analysis.
+
+<p align="center">
+  <img src="images/binary_conversion.png" width="700"><br>
+  <em>Conversion of boolean values to numeric format</em>
+</p>
+
+---
+
+## Step 9: Statistical Analysis
+
+Coverage statistics were calculated using:
+
+- Statistics by Categories  
+
+This produced mean broadband coverage by community.
+
+Key findings:
+- Ethelbert: 17.4%  
+- Grandview: 33.3%  
+
+<p align="center">
+  <img src="images/stats_output.png" width="700"><br>
+  <em>Mean broadband coverage by community</em>
+</p>
+
+---
+
+## Step 10: Final Visualization
+
+A gap map was created using graduated symbology:
+
+- Red: underserved areas  
+- Green: well-served areas  
+
+This visualization highlights regions requiring infrastructure investment.
+
+<p align="center">
+  <img src="images/gap_map.png" width="800"><br>
+  <em>Final broadband gap map highlighting underserved regions</em>
+</p>
 
 
-This metric highlights areas with higher population relative to connectivity.
 
-### 4. Visualization
-- Applied graduated symbology based on the underserved score  
-- Used a color ramp to distinguish underserved and well-served areas  
-- Generated a choropleth map focused on Manitoba  
+---
 
-## Results
-The analysis identifies regions within Manitoba where broadband access may not adequately support population demand. These areas are highlighted through higher underserved scores in the visualization.
 
 ## Project Structure
 
-.
+
+```
+
 ├── data/
-│ ├── broadband_data_mb.csv
-│ ├── census_population_mb.csv
-│ └── manitoba_boundaries.shp
-├── outputs/
-│ └── underserved_map_mb.png
+├── images/
+├── output/
 └── README.md
 
+```
 
-## How to Reproduce
 
-1. Open QGIS  
-2. Load the Manitoba boundary shapefile  
-3. Import CSV datasets  
-4. Join datasets using geographic identifiers  
-5. Create the underserved_score field using the Field Calculator  
-6. Apply graduated symbology based on the new field  
-7. Export the map as an image  
 
 ## Key Insights
 - Certain regions in Manitoba show higher population-to-connectivity gaps  
