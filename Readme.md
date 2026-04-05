@@ -70,6 +70,8 @@ To resolve the mismatch, the NBD Roads GeoPackage for Manitoba was used:
 
 <p align="center">
   <img src="images/road_ids.png" width="700"><br>
+  <img src="images/roads_ids.png" width="700"><br>
+
   <em>Road dataset with compatible ID structure</em>
 </p>
 
